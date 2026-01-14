@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout'){
             steps {
                 checkout scm
             }
@@ -19,7 +19,9 @@ pipeline {
         }
 
         stage('Build Application') {
-            sh 'npm run build'
+            steps {
+                sh 'npm run build'
+            }
         }
     }
 }
