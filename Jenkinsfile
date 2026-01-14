@@ -23,5 +23,18 @@ pipeline {
                 sh 'npm run build'
             }
         }
+
+        stage('Deploy to Docker') {
+            steps {
+                script {
+                    sh 'docker build -t my-react-app .'
+
+                    sh 'docker stop portfolio-container || true'
+                    sh 'docker rm portfolio-container || true'
+
+                    sh 'docker run -d --name portfolio-container -p 3001:80 my-react-app'
+                }
+            }
+        }
     }
 }
