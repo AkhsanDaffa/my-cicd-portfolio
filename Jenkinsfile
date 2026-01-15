@@ -5,34 +5,33 @@ pipeline {
         nodejs 'NodeJS'
     }
 
+    environment {
+        REMOTE_IP = '172.17.0.1'
+        REMOTE_PORT = '2222'
+    }
+
     stages {
         stage('Checkout'){
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/AkhsanDaffa/my-cicd-portfolio.git'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install & Build') {
             steps {
                 sh 'npm install'
-            }
-        }
-
-        stage('Build Application') {
-            steps {
                 sh 'npm run build'
             }
         }
 
-        stage('Deploy to Docker') {
+        stage('Deploy Remote SSH') {
             steps {
-                script {
-                    sh 'docker build -t my-react-app .'
+                sshagent(['ssh-deploy-key']){
+                    sh "ssh -o StrictHostKeyChecking=no -p ${REMOTE_PORT} root@${REMOTE_IP} 'rm -rf /var/www/html/*'"
 
-                    sh 'docker stop portfolio-container || true'
-                    sh 'docker rm portfolio-container || true'
+                    sh "scp -o StrictHostKeyChecking=no -P ${REMOTE_PORT} -r dist/* root@${REMOTE_IP}:/var/www/html/"
 
-                    sh 'docker run -d --name portfolio-container -p 3001:80 my-react-app'
+                    sh "ssh -o StrictHostKeyChecking=no -p ${REMOTE_PORT} root@${REMOTE_IP} 'service nginx reload'"
                 }
             }
         }
